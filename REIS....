@@ -1,0 +1,218 @@
+-- Aimbot Configuration GUI
+local gui = {}
+local aimbotActive = false
+local fovSize = 80
+local teamCheck = true
+local wallCheck = true
+local espBody = true
+
+-- Create draggable circle
+local circle = Instance.new("Frame")
+circle.Size = UDim2.new(0, 30, 0, 30)
+circle.Position = UDim2.new(0.5, -15, 0.5, -15)
+circle.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+circle.BorderSizePixel = 0
+circle.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create circle label
+local circleLabel = Instance.new("TextLabel")
+circleLabel.Text = "A"
+circleLabel.Size = UDim2.new(1, 0, 1, 0)
+circleLabel.BackgroundTransparency = 1
+circleLabel.FontSize = 20
+circleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+circleLabel.Parent = circle
+
+-- Dragging functionality
+local dragging = false
+local dragStart = Vector2.new()
+local dragOffset = Vector2.new()
+
+circle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        dragOffset = circle.AbsolutePosition - Vector2.new()
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        circle.Position = UDim2.new(
+            0,
+            dragOffset.X + delta.X,
+            0,
+            dragOffset.Y + delta.Y
+        )
+    end
+end)
+
+circle.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Create GUI when circle is clicked
+circle.MouseButton1Click:Connect(function()
+    -- Create main window
+    local window = Instance.new("Frame")
+    window.Size = UDim2.new(0, 250, 0, 300)
+    window.Position = UDim2.new(0.5, -125, 0.5, -150)
+    window.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    window.BorderSizePixel = 0
+    window.Parent = game.Players.LocalPlayer.PlayerGui
+    
+    -- Create title bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = window
+    
+    local titleText = Instance.new("TextLabel")
+    titleText.Text = "Aimbot Config"
+    titleText.Size = UDim2.new(1, 0, 1, 0)
+    titleText.BackgroundTransparency = 1
+    titleText.FontSize = 16
+    titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleText.Parent = titleBar
+    
+    -- Close button
+    local closeButton = Instance.new("TextButton")
+    closeButton.Text = "X"
+    closeButton.Size = UDim2.new(0, 30, 0, 30)
+    closeButton.Position = UDim2.new(1, -30, 0, 0)
+    closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    closeButton.BorderSizePixel = 0
+    closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeButton.Parent = titleBar
+    
+    closeButton.MouseButton1Click:Connect(function()
+        window:Destroy()
+    end)
+    
+    -- Create options container
+    local optionsContainer = Instance.new("ScrollingFrame")
+    optionsContainer.Size = UDim2.new(1, 0, 1, -30)
+    optionsContainer.Position = UDim2.new(0, 0, 0, 30)
+    optionsContainer.CanvasSize = UDim2.new(0, 0, 0, 300)
+    optionsContainer.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    optionsContainer.BorderSizePixel = 0
+    optionsContainer.Parent = window
+    
+    -- Create option containers
+    local function createOption(name, defaultValue)
+        local container = Instance.new("Frame")
+        container.Size = UDim2.new(1, 0, 0, 40)
+        container.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        container.BorderSizePixel = 0
+        container.Parent = optionsContainer
+        
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Text = name
+        nameLabel.Size = UDim2.new(0, 100, 1, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.FontSize = 14
+        nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLabel.Parent = container
+        
+        local toggleButton = Instance.new("TextButton")
+        toggleButton.Text = defaultValue and "ON" or "OFF"
+        toggleButton.Size = UDim2.new(0, 80, 0, 30)
+        toggleButton.Position = UDim2.new(1, -80, 0, 5)
+        toggleButton.BackgroundColor3 = defaultValue and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+        toggleButton.BorderSizePixel = 0
+        toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleButton.Parent = container
+        
+        return toggleButton
+    end
+    
+    -- Create options
+    local aimbotToggle = createOption("Aimbot", aimbotActive)
+    local fovSlider = Instance.new("Slider")
+    fovSlider.Size = UDim2.new(1, 0, 0, 30)
+    fovSlider.Position = UDim2.new(0, 0, 0, 0)
+    fovSlider.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    fovSlider.BorderSizePixel = 0
+    fovSlider.Parent = optionsContainer
+    
+    local teamCheckToggle = createOption("Team Check", teamCheck)
+    local wallCheckToggle = createOption("Wall Check", wallCheck)
+    local espBodyToggle = createOption("ESP Body", espBody)
+    
+    -- Connect toggle buttons
+    aimbotToggle.MouseButton1Click:Connect(function()
+        aimbotActive = not aimbotActive
+        aimbotToggle.Text = aimbotActive and "ON" or "OFF"
+        aimbotToggle.BackgroundColor3 = aimbotActive and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    end)
+    
+    teamCheckToggle.MouseButton1Click:Connect(function()
+        teamCheck = not teamCheck
+        teamCheckToggle.Text = teamCheck and "ON" or "OFF"
+        teamCheckToggle.BackgroundColor3 = teamCheck and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    end)
+    
+    wallCheckToggle.MouseButton1Click:Connect(function()
+        wallCheck = not wallCheck
+        wallCheckToggle.Text = wallCheck and "ON" or "OFF"
+        wallCheckToggle.BackgroundColor3 = wallCheck and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    end)
+    
+    espBodyToggle.MouseButton1Click:Connect(function()
+        espBody = not espBody
+        espBodyToggle.Text = espBody and "ON" or "OFF"
+        espBodyToggle.BackgroundColor3 = espBody and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    end)
+    
+    -- Create FOV slider
+    local fovLabel = Instance.new("TextLabel")
+    fovLabel.Text = "FOV: " .. tostring(fovSize)
+    fovLabel.Size = UDim2.new(0, 100, 0, 20)
+    fovLabel.Position = UDim2.new(0, 0, 0, 0)
+    fovLabel.BackgroundTransparency = 1
+    fovLabel.FontSize = 12
+    fovLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    fovLabel.Parent = fovSlider
+    
+    local fovValue = Instance.new("TextButton")
+    fovValue.Text = ""
+    fovValue.Size = UDim2.new(0, 20, 1, 0)
+    fovValue.Position = UDim2.new(0, 0, 0, 0)
+    fovValue.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    fovValue.BorderSizePixel = 0
+    fovValue.Parent = fovSlider
+    
+    local fovDragged = false
+    local fovDragStart = Vector2.new()
+    
+    fovSlider.MouseButton1Down:Connect(function()
+        fovDragged = true
+        fovDragStart = input.Position
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if fovDragged and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - fovDragStart
+            local newFov = math.max(20, math.min(400, fovSize + (delta.X * 1)))
+            fovSize = newFov
+            fovLabel.Text = "FOV: " .. tostring(math.floor(newFov))
+            fovValue.Position = UDim2.new(0, (newFov - 20) / (400 - 20) * 100, 0, 0)
+        end
+    end)
+    
+    fovSlider.MouseButton1Up:Connect(function()
+        fovDragged = false
+    end)
+end)
+
+-- Aimbot logic would go here:
+-- if aimbotActive then
+--     -- Get closest player within FOV
+--     -- Check team if enabled
+--     -- Check walls if enabled
+--     -- Update ESP if enabled
+-- end
